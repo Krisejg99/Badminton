@@ -34,25 +34,41 @@ export const PlayerForm = () => {
     })
 
     const onSubmit = (data: z.infer<typeof formSchema>) => {
-        const names = data.players.split("\n").filter((p) => p !== "")
+        const names = data.players.split("\n").filter((p) => p)
         const players = shuffleArray(names)
+
         // Bench warmer if odd number
-        const bench =
-            players.length % 2 !== 0 ? players[players.length - 1] : null
+        if (players.length % 2 !== 0) {
+            const previousBench = sessionStorage.getItem("benchWarmer")
+
+            let bench = players[players.length - 1]
+
+            if (bench === previousBench) {
+                bench = players[players.length - 2]
+            }
+
+            sessionStorage.setItem("benchWarmer", bench)
+            setBenchWarmer(bench)
+        } else {
+            setBenchWarmer(null)
+        }
+
         // Create teams
         const teams = assignPairs<string>(players)
+
         // Create 1v1 if odd number of teams
         const oneVsOne =
             teams.length % 2 !== 0
                 ? teams[teams.length - 1].map((p) => [p])
                 : null
+
         // Create matches
         const matches = assignPairs<string[]>(teams)
+
         // Add 1v1 to matches
         if (oneVsOne) matches.push(oneVsOne)
 
         setMatches(matches)
-        setBenchWarmer(bench)
     }
 
     return (
